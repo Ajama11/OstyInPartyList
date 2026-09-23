@@ -82,6 +82,33 @@ public static class TopBarHpHoverTipPatch
         description.Add("TorchheadTanking", torchheadTanking);
         #endregion
         
+        #region KinFollower
+        int kinFollowerCurrent = 0;
+        int kinFollowerMax = 0;
+        bool kinFollowerPresent = false;
+        bool kinFollowerTanking = false;
+        
+        var kinFollower = __instance._player.Creature.Pets.ToList()
+            .Find(TheKinFollower.HasTankingPower);
+        if (kinFollower != null)
+        {
+            kinFollowerCurrent = kinFollower.CurrentHp;
+            kinFollowerMax = kinFollower.MaxHp;
+            kinFollowerPresent = true;
+            
+            if (__instance._player.Creature.Pets.Count > 1 &&
+                PartyListSingleton.GetWhichOstyLikeWillTank(__instance._player) == kinFollower)
+            {
+                kinFollowerTanking = true;
+            }
+        }
+        
+        description.Add("KinFollowerCurrent", kinFollowerCurrent);
+        description.Add("KinFollowerMax", kinFollowerMax);
+        description.Add("KinFollowerPresent", kinFollowerPresent);
+        description.Add("KinFollowerTanking", kinFollowerTanking);
+        #endregion
+        
         #region Ave Mujica
         int dolorisCurrent = 0;
         bool dolorisPresent = false;
@@ -150,16 +177,28 @@ public static class TopBarHpHoverTipPatch
         description.Add("AmorisCurrent", amorisCurrent);
         description.Add("AmorisPresent", amorisPresent);
         #endregion
-
+        
         #region New Line Fuckery
-        bool ostyNewLine = ostyPresent && (torchheadPresent || dolorisPresent || mortisPresent || timorisPresent || amorisPresent);
-        bool torchheadNewLine = torchheadPresent && (dolorisPresent || mortisPresent || timorisPresent || amorisPresent);
-        bool dolorisNewLine = dolorisPresent && (mortisPresent || timorisPresent || amorisPresent);
-        bool mortisNewLine = mortisPresent && (timorisPresent || amorisPresent);
-        bool timorisNewLine = timorisPresent && amorisPresent;
+        List<bool> layers = CreateNewLineOrdering(
+            ostyPresent,
+            torchheadPresent,
+            kinFollowerPresent,
+            dolorisPresent,
+            mortisPresent,
+            timorisPresent,
+            amorisPresent
+        );
+        
+        bool ostyNewLine =        layers[5] && ostyPresent;
+        bool torchheadNewLine =   layers[4] && torchheadPresent;
+        bool kinFollowerNewLine = layers[3] && kinFollowerPresent;
+        bool dolorisNewLine =     layers[2] && dolorisPresent;
+        bool mortisNewLine =      layers[1] && mortisPresent;
+        bool timorisNewLine =     layers[0] && timorisPresent;
         
         description.Add("OstyNewLine", ostyNewLine);
         description.Add("TorchheadNewLine", torchheadNewLine);
+        description.Add("KinFollowerNewLine", kinFollowerNewLine);
         description.Add("DolorisNewLine", dolorisNewLine);
         description.Add("MortisNewLine", mortisNewLine);
         description.Add("TimorisNewLine", timorisNewLine);
@@ -169,5 +208,19 @@ public static class TopBarHpHoverTipPatch
         tips?.SetGlobalPosition(__instance.GlobalPosition + new Vector2(0, __instance.Size.Y + 20));
 
         return false;
+    }
+
+    public static List<bool> CreateNewLineOrdering(params bool[] args)
+    {
+        List<bool> reverseArgs = (((IEnumerable<bool>) args).Reverse()).ToList();
+
+        List<bool> list = [reverseArgs[0]];
+
+        for (int i = 1; i < reverseArgs.Count; i++)
+        {
+            list.Add(reverseArgs[i] || list[i - 1]);
+        }
+
+        return list;
     }
 }

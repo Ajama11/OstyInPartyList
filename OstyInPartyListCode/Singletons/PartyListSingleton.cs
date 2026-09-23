@@ -20,6 +20,7 @@ public class PartyListSingleton() : CustomSingletonModel(HookType.Combat)
         new TheOsty(),
         new Torchhead(),
         new Mortis(),
+        new TheKinFollower(),
     ];
 
     public static readonly AddedNode<NHealthBar, TextureRect> OstyHpBarIcon = new(bar =>
@@ -85,7 +86,13 @@ public class PartyListSingleton() : CustomSingletonModel(HookType.Combat)
     public override Task AfterPowerAmountChanged(PlayerChoiceContext choiceContext, PowerModel power, decimal amount, Creature? applier,
         CardModel? cardSource)
     {
-        if (power.Id != Mortis.TankingPower && power.Id != TheOsty.GotYourBackPower) return Task.CompletedTask;
+        // MainFile.Logger.Warn($"{power.Owner.Monster?.GetType().FullName} has changed {power.Id}");
+        if (power.Id != Mortis.TankingPower &&
+            power.Id != TheOsty.GotYourBackPower &&
+            power.Id != TheKinFollower.TankingPower)
+        {
+            return Task.CompletedTask;
+        }
         
         if (power.Id == TheOsty.GotYourBackPower && power.Owner.Player != null)
         {
