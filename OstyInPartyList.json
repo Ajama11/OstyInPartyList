@@ -1,0 +1,14 @@
+{
+  "id": "OstyInPartyList",
+  "name": "Osty in Party List",
+  "author": "Ajama",
+  "description": "Adds each player's Osty (or Osty-like summons from certain mods) to the multiplayer party menu, so that you can see how much HP each Osty has.",
+  "version": "v1.0.0",
+  "min_game_version": "0.111.0",
+  "has_pck": true,
+  "has_dll": true,
+  "dependencies": [
+    {"id": "BaseLib", "min_version": "3.4.7"}
+  ],
+  "affects_gameplay": false
+}

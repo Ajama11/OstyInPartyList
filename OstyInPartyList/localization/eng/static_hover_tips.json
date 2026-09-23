@@ -1,0 +1,4 @@
+{
+  "OSTYINPARTYLIST-PET_HP.title": "Pet HP",
+  "OSTYINPARTYLIST-PET_HP.description": "{OstyPresent:Osty = {OstyCurrent}/{OstyMax}|}{OstyTanking: <--|}{OstyNewLine:\n|}{TorchheadPresent:Torchhead = {TorchheadCurrent}|}{TorchheadTanking: <--|}{TorchheadNewLine:\n|}{DolorisPresent:Doloris = {DolorisCurrent}|}{DolorisNewLine:\n|}{MortisPresent:Mortis = {MortisCurrent}|}{MortisTanking: <--|}{MortisNewLine:\n|}{TimorisPresent:Timoris = {TimorisCurrent}|}{TimorisNewLine:\n|}{AmorisPresent:Amoris = {AmorisCurrent}|}"
+}
