@@ -4,6 +4,7 @@ using MegaCrit.Sts2.Core.HoverTips;
 using MegaCrit.Sts2.Core.Localization;
 using MegaCrit.Sts2.Core.Nodes.HoverTips;
 using MegaCrit.sts2.Core.Nodes.TopBar;
+using OstyInPartyList.OstyInPartyListCode.OstyLikes;
 using OstyInPartyList.OstyInPartyListCode.Singletons;
 
 namespace OstyInPartyList.OstyInPartyListCode.Patches;
@@ -14,6 +15,10 @@ public static class TopBarHpHoverTipPatch
     // HORRENDOUS CODE BELOW
     // NO GODS TRAVERSE THIS LAND
     // FOR THEY WOULD HAVE STOPPED ME
+    
+    public const string Doloris = "AveMujica.AveMujicaCode.Cards.Dolls.DolorisDoll";
+    public const string Timoris = "AveMujica.AveMujicaCode.Cards.Dolls.TimorisDoll";
+    public const string Amoris = "AveMujica.AveMujicaCode.Cards.Dolls.AmorisDoll";
     
     [HarmonyPatch("OnFocus")]
     [HarmonyPrefix]
@@ -27,6 +32,7 @@ public static class TopBarHpHoverTipPatch
         LocString title = HoverTipFactory.L10NStatic(str + ".title");
         LocString description = HoverTipFactory.L10NStatic(str + ".description");
 
+        #region Osty
         int ostyCurrent = 0;
         int ostyMax = 0;
         bool ostyPresent = false;
@@ -50,14 +56,15 @@ public static class TopBarHpHoverTipPatch
         description.Add("OstyMax", ostyMax);
         description.Add("OstyPresent", ostyPresent);
         description.Add("OstyTanking", ostyTanking);
+        #endregion
         
-        
+        #region Torchhead
         int torchheadCurrent = 0;
         bool torchheadPresent = false;
         bool torchheadTanking = false;
         
         var torchhead = __instance._player.Creature.Pets.ToList()
-            .Find(c => c.Monster?.GetType().FullName == PartyListSingleton.Torchhead);
+            .Find(c => new Torchhead().MatchName(c));
         if (torchhead != null)
         {
             torchheadCurrent = torchhead.CurrentHp;
@@ -73,13 +80,14 @@ public static class TopBarHpHoverTipPatch
         description.Add("TorchheadCurrent", torchheadCurrent);
         description.Add("TorchheadPresent", torchheadPresent);
         description.Add("TorchheadTanking", torchheadTanking);
+        #endregion
         
-        
+        #region Ave Mujica
         int dolorisCurrent = 0;
         bool dolorisPresent = false;
         
         var doloris = __instance._player.Creature.Pets.ToList()
-            .Find(c => c.Monster?.GetType().FullName == PartyListSingleton.Doloris);
+            .Find(c => c.Monster?.GetType().FullName == Doloris);
         if (doloris != null)
         {
             dolorisCurrent = doloris.CurrentHp;
@@ -95,7 +103,7 @@ public static class TopBarHpHoverTipPatch
         bool mortisTanking = false;
         
         var mortis = __instance._player.Creature.Pets.ToList()
-            .Find(c => c.Monster?.GetType().FullName == PartyListSingleton.Mortis);
+            .Find(c => new Mortis().MatchName(c));
         if (mortis != null)
         {
             mortisCurrent = mortis.CurrentHp;
@@ -117,7 +125,7 @@ public static class TopBarHpHoverTipPatch
         bool timorisPresent = false;
         
         var timoris = __instance._player.Creature.Pets.ToList()
-            .Find(c => c.Monster?.GetType().FullName == PartyListSingleton.Timoris);
+            .Find(c => c.Monster?.GetType().FullName == Timoris);
         if (timoris != null)
         {
             timorisCurrent = timoris.CurrentHp;
@@ -132,7 +140,7 @@ public static class TopBarHpHoverTipPatch
         bool amorisPresent = false;
         
         var amoris = __instance._player.Creature.Pets.ToList()
-            .Find(c => c.Monster?.GetType().FullName == PartyListSingleton.Amoris);
+            .Find(c => c.Monster?.GetType().FullName == Amoris);
         if (amoris != null)
         {
             amorisCurrent = amoris.CurrentHp;
@@ -141,8 +149,9 @@ public static class TopBarHpHoverTipPatch
         
         description.Add("AmorisCurrent", amorisCurrent);
         description.Add("AmorisPresent", amorisPresent);
+        #endregion
 
-
+        #region New Line Fuckery
         bool ostyNewLine = ostyPresent && (torchheadPresent || dolorisPresent || mortisPresent || timorisPresent || amorisPresent);
         bool torchheadNewLine = torchheadPresent && (dolorisPresent || mortisPresent || timorisPresent || amorisPresent);
         bool dolorisNewLine = dolorisPresent && (mortisPresent || timorisPresent || amorisPresent);
@@ -154,10 +163,9 @@ public static class TopBarHpHoverTipPatch
         description.Add("DolorisNewLine", dolorisNewLine);
         description.Add("MortisNewLine", mortisNewLine);
         description.Add("TimorisNewLine", timorisNewLine);
-        
+        #endregion
         
         var tips = NHoverTipSet.CreateAndShow(__instance, new HoverTip(title, description));
-        
         tips?.SetGlobalPosition(__instance.GlobalPosition + new Vector2(0, __instance.Size.Y + 20));
 
         return false;

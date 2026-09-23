@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable> <!--Makes code analysis regarding null values stricter.-->
         <Publicize>True</Publicize> <!--Allows access to originally private/protected members but may (unlikely to) cause errors.-->
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <LangVersion>14</LangVersion>
 
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
         <PathMap>$(AppOutputBase)=.\</PathMap>
@@ -59,10 +60,6 @@
         <None Include="OstyInPartyList.json"/>
         <None Include="project.godot"/>
         <None Include="OstyInPartyList/**"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="OstyInPartyListCode\OstyLikes\" />
     </ItemGroup>
 
     <Target Name="CheckDependencyPaths">

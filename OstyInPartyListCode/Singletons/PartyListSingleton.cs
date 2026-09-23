@@ -5,30 +5,22 @@ using MegaCrit.Sts2.Core.Assets;
 using MegaCrit.Sts2.Core.Entities.Creatures;
 using MegaCrit.Sts2.Core.Entities.Players;
 using MegaCrit.Sts2.Core.GameActions.Multiplayer;
-using MegaCrit.Sts2.Core.Helpers;
 using MegaCrit.Sts2.Core.Models;
-using MegaCrit.Sts2.Core.Models.Monsters;
-using MegaCrit.Sts2.Core.Models.Powers;
 using MegaCrit.Sts2.Core.Nodes;
 using MegaCrit.Sts2.Core.Nodes.Combat;
 using MegaCrit.Sts2.Core.Nodes.Multiplayer;
+using OstyInPartyList.OstyInPartyListCode.OstyLikes;
 
 namespace OstyInPartyList.OstyInPartyListCode.Singletons;
 
 public class PartyListSingleton() : CustomSingletonModel(HookType.Combat)
 {
-    public static readonly ModelId GotYourBackPower = new("POWER", "THEHEROEXPANSION-GOT_YOUR_BACK_POWER");
-    public static readonly string OstyIcon = ImageHelper.GetImagePath("atlases/power_atlas.sprites/die_for_you_power.tres");
-    
-    public const string Torchhead = "Collector.CollectorCode.Core.TorchheadMonsterModel";
-    public static readonly string TorchheadIcon = "res://Collector/images/atlases/power_atlas.sprites/torchhead_power.tres";
-    
-    public const string Doloris = "AveMujica.AveMujicaCode.Cards.Dolls.DolorisDoll";
-    public const string Mortis = "AveMujica.AveMujicaCode.Cards.Dolls.MortisDoll";
-    public const string Timoris = "AveMujica.AveMujicaCode.Cards.Dolls.TimorisDoll";
-    public const string Amoris = "AveMujica.AveMujicaCode.Cards.Dolls.AmorisDoll";
-    public static readonly ModelId MortisPower = new ("POWER", "AVEMUJICA-DO_NOT_FEAR_DEATH_POWER");
-    public static readonly string MortisIcon = "res://AveMujica/images/powers/do_not_fear_death_power.png";
+    public static List<BaseOstyLike> OstyLikes =
+    [
+        new TheOsty(),
+        new Torchhead(),
+        new Mortis(),
+    ];
 
     public static readonly AddedNode<NHealthBar, TextureRect> OstyHpBarIcon = new(bar =>
     {
@@ -57,8 +49,8 @@ public class PartyListSingleton() : CustomSingletonModel(HookType.Combat)
 
     public override Task AfterCreatureAddedToCombat(Creature creature)
     {
-        if (!IsOstyLike(creature)) return Task.CompletedTask;
         if (creature.PetOwner == null) return Task.CompletedTask;
+        if (!IsOstyLike(creature)) return Task.CompletedTask;
 
         PossiblyChangeWhoIsTanking(creature);
         
@@ -93,9 +85,9 @@ public class PartyListSingleton() : CustomSingletonModel(HookType.Combat)
     public override Task AfterPowerAmountChanged(PlayerChoiceContext choiceContext, PowerModel power, decimal amount, Creature? applier,
         CardModel? cardSource)
     {
-        if (power.Id != MortisPower && power.Id != GotYourBackPower) return Task.CompletedTask;
+        if (power.Id != Mortis.TankingPower && power.Id != TheOsty.GotYourBackPower) return Task.CompletedTask;
         
-        if (power.Id == GotYourBackPower && power.Owner.Player != null)
+        if (power.Id == TheOsty.GotYourBackPower && power.Owner.Player != null)
         {
             PossiblyChangeWhoIsTanking(power.Owner, power.Owner.Player);
         }
@@ -118,21 +110,9 @@ public class PartyListSingleton() : CustomSingletonModel(HookType.Combat)
 
         state.MoveChild(OstyHpBar[state], 0);
         
-        string iconPath;
-
-        if (creature.Monster is Osty)
-        {
-            iconPath = OstyIcon;
-        }
-        else
-        {
-            iconPath = creature.Monster?.GetType().FullName switch
-            {
-                Torchhead => TorchheadIcon,
-                Mortis => MortisIcon,
-                _ => ImageHelper.GetImagePath("atlases/power_atlas.sprites/guarded_power.tres")
-            };
-        }
+        string iconPath = OstyLikes
+            .FirstOrDefault(o => o.MatchName(creature))
+            ?.Icon ?? new BaseOstyLike().Icon;
 
         OstyHpBarIcon[OstyHpBar[state]].Texture = PreloadManager.Cache.GetTexture2D(iconPath);
         OstyHpBarIcon[OstyHpBar[state]].Visible = true;
@@ -165,7 +145,9 @@ public class PartyListSingleton() : CustomSingletonModel(HookType.Combat)
         
         OstyHpBar[state].RefreshValues();
     }
-
+    
+    /// <param name="somePet">The pet in question. If overriding "player", this is ignored, and you can just pass in the player's Creature.</param>
+    /// <param name="player">The player who owns the pet. If null/not overridden, will be somePet.PetOwner</param>
     public static void PossiblyChangeWhoIsTanking(Creature somePet, Player? player = null)
     {
         player ??= somePet.PetOwner;
@@ -191,16 +173,7 @@ public class PartyListSingleton() : CustomSingletonModel(HookType.Combat)
 
     public static bool IsOstyLike(Creature creature)
     {
-        return
-            (
-                creature.Monster is Osty &&
-                ((creature.PetOwner?.Creature.GetPower(GotYourBackPower)?.Amount ?? 0) == 0)
-            ) ||
-            creature.Monster?.GetType().FullName == Torchhead ||
-            (
-                creature.Monster?.GetType().FullName == Mortis &&
-                ((creature.GetPower(MortisPower)?.Amount ?? 0) > 0)
-            );
+        return OstyLikes.Any(o => o.ShouldCount(creature));
     }
 
     public static Creature? GetWhichOstyLikeWillTank(Player? player)
